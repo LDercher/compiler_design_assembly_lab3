@@ -229,61 +229,42 @@ problem6 =
     , addq ~$8 ~%r_array
     , jmp ~$$"test"
     ]
-    , text "ret"
+  , text "ret"
     [ subq ~%r_start ~%r_array
     , movq ~%r_array ~%m_length
     , shrq ~$3 ~%m_length
-    , jmp ~$$"rev"
-    ]
-    , text "rev"
-    [ shlq ~$3 ~%m_length
-    , subq ~$8 ~%m_length
-    , jmp ~$$"inc"
-    ]
-  , text "inc"
-    [ movq ~%r_start ~%r_temp1
---    , shlq ~$3 ~%m_length
-    , addq ~%m_length ~%r_temp1
-    , subq ~$8 ~%r_temp1
-    , movq ~%r_temp1 ~%r_temp2
-        --      , movq ~%r_start ~%r_temp3
-    , movq ~%r_start ~%m_length
---    , addq ~$8 ~%m_length
-    , jmp ~$$"ret_sort"
-            --  , cmpq ~%r_temp1 ~%r_start
-            --  , j Eq "ret_rev"
-          --     cmpq ~%r_start ~%r_end
-          --    , j Eq ~$$"ret_rev"
-          --    , cmpq ~#r_start ~#r_end
-          --    , j Lt ~$$"swap"
-          --    , addq ~$8 ~%r_start
-          --    , subq ~$8 ~%r_end
-          --    , jmp ~$$"inc"
-              ]
-  , text "loop"
-    [ cmpq ~%r_start ~%r_temp1
+    , movq ~%r_start ~%r_temp1
+    , addq ~$8 ~%r_temp1
+    , addq ~%r_start ~%r_array
+    , subq ~$16 ~%r_array
+    , jmp ~$$"it"
+    ] -- we have r_start at index0, r_temp1 at index 1, r_array index n-1, m_lenth = length of arr
+  , text "it"
+    [ cmpq ~%r_start ~%r_array
     , j Eq ~$$"ret_sort"
-    , movq ~#m_length ~%r_temp3
-    , cmpq ~#r_start ~%r_temp3
-    , j Gt ~$$"swap"
+    , movq ~#r_temp1 ~%r_temp2
+    , cmpq ~#r_start ~%r_temp2
+    , j Lt ~$$"swap"
     ]
   , text "swap"
-    [ movq ~#r_start ~%r_temp1
-    , movq ~#m_length ~%r_temp2
-    , movq ~%r_temp2  ~#r_start
-    , movq ~%r_temp1 ~#m_length
-    , cmpq ~%r_start ~%m_length
-    , jmp ~$$"loop"
+    [ movq ~#r_start ~%r_temp3
+    , movq ~#r_temp1 ~%r_temp4
+    , movq ~%r_temp4 ~#r_start
+    , movq ~%r_temp3 ~#r_temp1
+    , addq ~$8 ~%r_temp1
+    , addq ~$8 ~%r_start
+    , jmp ~$$"it"
     ]
   , text "ret_sort"
-    [ movq ~#r_temp1 ~%RAX
-    , retq
+    [
+      retq
     ]
-  ]
+  ] 
     where r_start = RSI
           m_length = RDX
-          r_end = R14
+          r_temp4 = R14
           r_temp1 = R12
           r_temp2 = R13
           r_temp3 = R15
           r_array = RDI
+
