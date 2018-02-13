@@ -93,9 +93,9 @@ problem1 =
 -- Write a function which returns (in RAX) the largest number appearing in the
 -- input array.
 
-problem2 = 
+problem2 =
   [ global "function"
-    [ movq ~$0 ~%m_largest 
+    [ movq ~$0 ~%m_largest
     ]
   , text "test"
     [ cmpq ~$0 ~#r_array
@@ -142,9 +142,9 @@ problem3 =
 -- function should return 3.
 problem4 =
   [ global "function"
-    [ movq ~$0 ~%m_largest 
+    [ movq ~$0 ~%m_largest
     , movq ~$0 ~%m_largest_ind
-    , movq ~$0 ~%m_counter 
+    , movq ~$0 ~%m_counter
     ]
   , text "test"
     [ cmpq ~$0 ~#r_array
@@ -180,34 +180,25 @@ problem5 =
     , movq ~%r_start ~%r_end
     ]
     , text "test"
-    [ cmpq ~$0 ~#r_array
+    [ cmpq ~$0 ~#r_end
     , j Eq ~$$"ret"
-    , addq ~$8 ~%r_array
+    , addq ~$8 ~%r_end
     , jmp ~$$"test"
     ]
     , text "ret"
-    [ subq ~%r_start ~%r_array
-    , movq ~%r_array ~%m_length
-    , shrq ~$3 ~%m_length
-    , jmp ~$$"rev"
-    ]
-  , text "rev"
-    [ shlq ~$3 ~%m_length
-    , subq ~$8 ~%m_length
-    , addq ~%m_length ~%r_end
+    [ subq ~$8 ~%r_end
     , cmpq ~%r_start ~%r_end
     , j Eq ~$$"ret_rev"
-    , jmp ~$$"move"
     ]
   , text "move"
     [ movq ~#r_start ~%r_temp1
     , movq ~#r_end ~%r_temp2
     , movq ~%r_temp2  ~#r_start
     , movq ~%r_temp1 ~#r_end
-    , cmpq ~%r_start ~%r_end
-    , j Eq ~$$"ret_rev"
     , addq ~$8 ~%r_start
     , subq ~$8 ~%r_end
+    , cmpq ~%r_start ~%r_end
+    , j Le ~$$"ret_rev"
     , jmp ~$$"move"
     ]
   , text "ret_rev"
@@ -217,7 +208,7 @@ problem5 =
   ]
     where r_start = RSI
           m_length = RDX
-          r_end = R14 
+          r_end = R14
           r_temp1 = R12
           r_temp2 = R13
           r_array = RDI
@@ -227,12 +218,12 @@ problem5 =
 -- (either explicitly or implicitly).  Your sort should run in n^2 time or less,
 -- but you do not need to demonstrate any sophistication in your sorting
 -- algorithm.
+
 problem6 =
   [ global "function"
     [ movq ~%r_array ~%r_start
-    , movq ~%r_start ~%r_end
     ]
-    , text "test"
+  , text "test"
     [ cmpq ~$0 ~#r_array
     , j Eq ~$$"ret"
     , addq ~$8 ~%r_array
@@ -244,38 +235,55 @@ problem6 =
     , shrq ~$3 ~%m_length
     , jmp ~$$"rev"
     ]
-  , text "rev"
+    , text "rev"
     [ shlq ~$3 ~%m_length
     , subq ~$8 ~%m_length
-    , addq ~%m_length ~%r_end
     , jmp ~$$"inc"
     ]
   , text "inc"
-    [ cmpq ~%r_start ~%r_end
-    , j Eq ~$$"ret_rev"
-    , cmpq ~#r_start ~#r_end
-    , j Lt ~$$"swap"
-    , addq ~$8 ~%r_start
-    , subq ~$8 ~%r_end
-    , jmp ~$$"inc"
-    ]  
+    [ movq ~%r_start ~%r_temp1
+--    , shlq ~$3 ~%m_length
+    , addq ~%m_length ~%r_temp1
+    , subq ~$8 ~%r_temp1
+    , movq ~%r_temp1 ~%r_temp2
+        --      , movq ~%r_start ~%r_temp3
+    , movq ~%r_start ~%m_length
+--    , addq ~$8 ~%m_length
+    , jmp ~$$"ret_sort"
+            --  , cmpq ~%r_temp1 ~%r_start
+            --  , j Eq "ret_rev"
+          --     cmpq ~%r_start ~%r_end
+          --    , j Eq ~$$"ret_rev"
+          --    , cmpq ~#r_start ~#r_end
+          --    , j Lt ~$$"swap"
+          --    , addq ~$8 ~%r_start
+          --    , subq ~$8 ~%r_end
+          --    , jmp ~$$"inc"
+              ]
+  , text "loop"
+    [ cmpq ~%r_start ~%r_temp1
+    , j Eq ~$$"ret_sort"
+    , movq ~#m_length ~%r_temp3
+    , cmpq ~#r_start ~%r_temp3
+    , j Gt ~$$"swap"
+    ]
   , text "swap"
     [ movq ~#r_start ~%r_temp1
-    , movq ~#r_end ~%r_temp2
+    , movq ~#m_length ~%r_temp2
     , movq ~%r_temp2  ~#r_start
-    , movq ~%r_temp1 ~#r_end
-    , cmpq ~%r_start ~%r_end
-    , j Eq ~$$"ret_rev"
-    , jmp ~$$"inc"
+    , movq ~%r_temp1 ~#m_length
+    , cmpq ~%r_start ~%m_length
+    , jmp ~$$"loop"
     ]
-  , text "ret_rev"
-    [
-      retq
+  , text "ret_sort"
+    [ movq ~#r_temp1 ~%RAX
+    , retq
     ]
   ]
     where r_start = RSI
           m_length = RDX
-          r_end = R14 
+          r_end = R14
           r_temp1 = R12
           r_temp2 = R13
+          r_temp3 = R15
           r_array = RDI
