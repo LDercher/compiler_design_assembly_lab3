@@ -190,7 +190,7 @@ problem5 =
     , cmpq ~%r_start ~%r_end
     , j Eq ~$$"ret_rev"
     ]
-  , text "move"
+    , text "move"
     [ movq ~#r_start ~%r_temp1
     , movq ~#r_end ~%r_temp2
     , movq ~%r_temp2  ~#r_start
@@ -201,7 +201,7 @@ problem5 =
     , j Le ~$$"ret_rev"
     , jmp ~$$"move"
     ]
-  , text "ret_rev"
+    , text "ret_rev"
     [
       retq
     ]
@@ -221,50 +221,47 @@ problem5 =
 
 problem6 =
   [ global "function"
-    [ movq ~%r_array ~%r_start
+    [ jmp ~$$"outer_test"
     ]
-  , text "test"
+    , text "outer_test"
     [ cmpq ~$0 ~#r_array
-    , j Eq ~$$"ret"
-    , addq ~$8 ~%r_array
-    , jmp ~$$"test"
+    , j Eq ~$$"ret" 
+    , movq ~%r_array ~%r_curr
+    , movq ~%r_curr ~%r_next
+    , addq ~$8 ~%r_next
     ]
-  , text "ret"
-    [ subq ~%r_start ~%r_array
-    , movq ~%r_array ~%m_length
-    , shrq ~$3 ~%m_length
-    , movq ~%r_start ~%r_temp1
-    , addq ~$8 ~%r_temp1
-    , addq ~%r_start ~%r_array
-    , subq ~$16 ~%r_array
-    , jmp ~$$"it"
-    ] -- we have r_start at index0, r_temp1 at index 1, r_array index n-1, m_lenth = length of arr
-  , text "it"
-    [ cmpq ~%r_start ~%r_array
-    , j Eq ~$$"ret_sort"
-    , movq ~#r_temp1 ~%r_temp2
-    , cmpq ~#r_start ~%r_temp2
-    , j Lt ~$$"swap"
+    , text "inner_test"
+    [ cmpq ~$0 ~#r_next
+    , j Eq ~$$"next"
+    , movq ~#r_next ~%r_temp3
+    , cmpq ~#r_array ~%r_temp3
+    , j Gt ~$$"skip"
+    , movq ~#r_curr ~%r_temp1
+    , movq ~#r_next ~%r_temp2
+    , movq ~%r_temp1 ~#r_next
+    , movq ~%r_temp2 ~#r_curr
     ]
-  , text "swap"
-    [ movq ~#r_start ~%r_temp3
-    , movq ~#r_temp1 ~%r_temp4
-    , movq ~%r_temp4 ~#r_start
-    , movq ~%r_temp3 ~#r_temp1
-    , addq ~$8 ~%r_temp1
-    , addq ~$8 ~%r_start
-    , jmp ~$$"it"
+    , text "skip"
+    [ addq ~$8 ~%r_curr
+    , addq ~$8 ~%r_next
+    , jmp ~$$"inner_test"
     ]
-  , text "ret_sort"
-    [
-      retq
+    , text "next"
+    [ addq ~$8 ~%r_array
+    , jmp ~$$"outer_test"
     ]
-  ] 
-    where r_start = RSI
-          m_length = RDX
-          r_temp4 = R14
+    , text "ret"
+    [ 
+     retq
+    ]
+  ]
+    where r_curr = RSI
+          r_next = RDX
           r_temp1 = R12
           r_temp2 = R13
-          r_temp3 = R15
+          r_temp3 = R14
           r_array = RDI
+
+
+
 
