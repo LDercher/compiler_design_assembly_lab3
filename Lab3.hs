@@ -221,45 +221,42 @@ problem5 =
 
 problem6 =
   [ global "function"
-    [ jmp ~$$"outer_test"
+    [ movq ~%r_array ~%r_marker
+    , jmp ~$$"outer_test"
     ]
     , text "outer_test"
-    [ cmpq ~$0 ~#r_array
-    , j Eq ~$$"ret" 
+    [ cmpq ~$0 ~#r_marker
+    , j Eq ~$$"ret"
     , movq ~%r_array ~%r_curr
-    , movq ~%r_curr ~%r_next
-    , addq ~$8 ~%r_next
     ]
     , text "inner_test"
-    [ cmpq ~$0 ~#r_next
+    [ cmpq ~$0 ~#(8, r_curr)
     , j Eq ~$$"next"
-    , movq ~#r_next ~%r_temp3
-    , cmpq ~#r_array ~%r_temp3
-    , j Gt ~$$"skip"
     , movq ~#r_curr ~%r_temp1
-    , movq ~#r_next ~%r_temp2
-    , movq ~%r_temp1 ~#r_next
+    , movq ~#(8, r_curr) ~%r_temp2
+    , cmpq ~%r_temp1 ~%r_temp2
+    , j Gt ~$$"skip"
+    , movq ~%r_temp1 ~#(8, r_curr)
     , movq ~%r_temp2 ~#r_curr
     ]
     , text "skip"
     [ addq ~$8 ~%r_curr
-    , addq ~$8 ~%r_next
     , jmp ~$$"inner_test"
     ]
     , text "next"
-    [ addq ~$8 ~%r_array
+    [ addq ~$8 ~%r_marker
     , jmp ~$$"outer_test"
     ]
     , text "ret"
-    [ 
+    [
      retq
     ]
   ]
     where r_curr = RSI
-          r_next = RDX
+          r_marker = RAX
           r_temp1 = R12
           r_temp2 = R13
-          r_temp3 = R14
+          --r_temp3 = R14
           r_array = RDI
 
 
